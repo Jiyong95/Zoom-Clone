@@ -21,4 +21,10 @@ const handleListen = () => console.log("Listening on http://localhost:5000");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+function handleConnection(socket) {
+  console.log(socket);
+}
+// event가 발생하길 기다리는 함수. + 연결된 서버 정보를 soket으로 콜백 함수에 전달
+wss.on("connection", handleConnection);
+
 server.listen(5000, handleListen);
