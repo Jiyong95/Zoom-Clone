@@ -18,15 +18,14 @@ app.get("/*", (req, res) => res.redirect("/"));
 
 const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
-
+let test1 = 123;
 wsServer.on("connection", (socket) => {
-  socket.on("enter_room", (msg, cb) => {
+  socket.on("enter_room", (msg, f1, f2) => {
     console.log(msg);
-    // cb는 Server에서 호출하지만 Browser에서 실행된다!!!
-    //=>Browser console에 cb()가 찍힌다.
     setTimeout(() => {
-      cb();
-    }, 10000);
+      // f1();
+      f2(test1); //BE에서 호출하지만 FE에서 실행됨(보안 문제)
+    }, 5000);
   });
 });
 
