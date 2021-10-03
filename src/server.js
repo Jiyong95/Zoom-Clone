@@ -21,18 +21,20 @@ const handleListen = () => console.log("Listening on http://localhost:5000");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+// 연결된 Browser list
+const sockets = [];
+
 // Server에서 Browser로 연결, Browser 실행 시 호출
 wss.on("connection", (socket) => {
-  // event가 발생하길 기다리는 함수. + 연결된 브라우저 정보를 socket으로 콜백 함수에 전달
-  // console.log(socket);
-  console.log("Connected to Browser✅");
+  sockets.push(socket);
   socket.on("close", () => console.log("Disconnected from the Browser❌"));
-  // Browser(app.js)에서 Server로 보낸 메세지를 받음
+  //Browser에서 받은 message를 다시 보내줌
   socket.on("message", (message) => {
-    console.log(message.toString("utf8"));
+    console.log("Browser : ", message.toString("utf8"));
+    // 연결된 모든 Browser에 message 보내기
+    sockets.forEach((aSoket) => aSoket.send(message.toString("utf8")));
+    // socket.send(message.toString("utf8"));
   });
-
-  socket.send("hello!");
 });
 
 server.listen(5000, handleListen);
