@@ -20,7 +20,14 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
-  console.log(socket);
+  socket.on("enter_room", (msg, cb) => {
+    console.log(msg);
+    // cb는 Server에서 호출하지만 Browser에서 실행된다!!!
+    //=>Browser console에 cb()가 찍힌다.
+    setTimeout(() => {
+      cb();
+    }, 10000);
+  });
 });
 
 const handleListen = () => console.log("Listening on http://localhost:5000");
