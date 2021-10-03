@@ -1,6 +1,6 @@
 import http from "http";
 import WebSocket from "ws";
-import express from "express";
+import express, { json } from "express";
 
 const app = express();
 // express view engine 설정
@@ -27,13 +27,24 @@ const sockets = [];
 // Server에서 Browser로 연결, Browser 실행 시 호출
 wss.on("connection", (socket) => {
   sockets.push(socket);
+  socket["nickname"] = "guest";
   socket.on("close", () => console.log("Disconnected from the Browser❌"));
   //Browser에서 받은 message를 다시 보내줌
-  socket.on("message", (message) => {
-    console.log("Browser : ", message.toString("utf8"));
+  socket.on("message", (msg) => {
+    const message = JSON.parse(msg);
     // 연결된 모든 Browser에 message 보내기
-    sockets.forEach((aSoket) => aSoket.send(message.toString("utf8")));
-    // socket.send(message.toString("utf8"));
+    switch (message.type) {
+      case "new_message":
+        sockets.forEach((aSoket) =>
+          aSoket.send(
+            `${socket.nickname} : ${message.payload.toString("utf8")}`
+          )
+        );
+      case "nickname":
+        // socket에 속성 추가
+        socket["nickname"] = message.payload;
+      // socket.nickname = message.payload 도 가능
+    }
   });
 });
 
