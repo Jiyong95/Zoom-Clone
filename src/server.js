@@ -27,11 +27,21 @@ wsServer.on("connection", (socket) => {
   socket.on("enter_room", (payload, showRoom) => {
     // room join
     socket.join(payload.roomName);
-    console.log(socket.rooms);
+    // console.log(socket.rooms);
     // => {socketId, payload}
     showRoom();
     // 같은 roomName에 있는 사람들(socket)에게(나자신 제외) emit
     socket.to(payload.roomName).emit("welcome");
+  });
+  // disconnecting은 정해져있음. 누군가 나가면(Browser연결 끊기면) 실행
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((socketId) => socket.to(socketId).emit("bye"));
+  });
+  // FE에서 받을 emit
+  socket.on("new_message", (msg, roomName, done) => {
+    // FE로 보낼 emit
+    socket.to(roomName).emit("new_message", msg);
+    done();
   });
 });
 
