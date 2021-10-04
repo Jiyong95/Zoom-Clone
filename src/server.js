@@ -24,12 +24,14 @@ wsServer.on("connection", (socket) => {
   socket.onAny((event) => {
     console.log(`Socket Event:${event}`);
   });
-  socket.on("enter_room", (roomName, done) => {
+  socket.on("enter_room", (payload, showRoom) => {
     // room join
-    socket.join(roomName);
-    console.log("2", socket.rooms);
+    socket.join(payload.roomName);
+    console.log(socket.rooms);
     // => {socketId, payload}
-    done();
+    showRoom();
+    // 같은 roomName에 있는 사람들(socket)에게(나자신 제외) emit
+    socket.to(payload.roomName).emit("welcome");
   });
 });
 

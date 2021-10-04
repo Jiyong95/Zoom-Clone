@@ -8,6 +8,13 @@ const room = document.getElementById("room");
 room.hidden = true;
 let roomName;
 
+function addMessage(msg) {
+  const ul = room.querySelector("ul");
+  const li = document.createElement("li");
+  li.innerText = msg;
+  ul.appendChild(li);
+}
+
 function showRoom() {
   welcome.hidden = true;
   room.hidden = false;
@@ -20,8 +27,12 @@ function handleRoomSubmit(event) {
   //socket.send와 비슷
   // BE에서 호출할 함수는 마지막 인자로 보낼 수 있고, 마지막 인자가 아닌 함수는
   // BE에서 실행 시 오류.
-  socket.emit("enter_room", { payload: input.value }, showRoom);
   roomName = input.value;
+  socket.emit("enter_room", { roomName }, showRoom);
   input.value = "";
 }
 form.addEventListener("submit", handleRoomSubmit);
+
+socket.on("welcome", () => {
+  addMessage("Someone joined!");
+});
