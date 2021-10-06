@@ -20,6 +20,7 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+  socket["nickname"] = "guest";
   // middleware, 어느 event에서든지 실행된다.
   socket.onAny((event) => {
     console.log(`Socket Event:${event}`);
@@ -31,18 +32,21 @@ wsServer.on("connection", (socket) => {
     // => {socketId, payload}
     showRoom();
     // 같은 roomName에 있는 사람들(socket)에게(나자신 제외) emit
-    socket.to(payload.roomName).emit("welcome");
+    socket.to(payload.roomName).emit("welcome", socket.nickname);
   });
   // disconnecting은 정해져있음. 누군가 나가면(Browser연결 끊기면) 실행
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((socketId) => socket.to(socketId).emit("bye"));
+    socket.rooms.forEach((socketId) =>
+      socket.to(socketId).emit("bye", socket.nickname)
+    );
   });
   // FE에서 받을 emit
   socket.on("new_message", (msg, roomName, done) => {
     // FE로 보낼 emit
-    socket.to(roomName).emit("new_message", msg);
+    socket.to(roomName).emit("new_message", `${socket.nickname}: ${msg}`);
     done();
   });
+  socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
 });
 
 const handleListen = () => console.log("Listening on http://localhost:5000");
