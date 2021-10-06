@@ -34,11 +34,15 @@ function publicRooms() {
   return publicRooms;
 }
 
+function countRoom(roomName) {
+  // roomName이 있으면 size리턴
+  return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
 wsServer.on("connection", (socket) => {
   socket["nickname"] = "guest";
   // middleware, 어느 event에서든지 실행된다.
   socket.onAny((event) => {
-    // console.log(wsServer.sockets.adapter);
+    console.log(wsServer.sockets.adapter);
     console.log(`Socket Event:${event}`);
   });
   socket.on("enter_room", (payload, showRoom) => {
@@ -48,13 +52,17 @@ wsServer.on("connection", (socket) => {
     // => {socketId, payload}
     showRoom();
     // 같은 roomName에 있는 사람들(socket)에게(나자신 제외) emit
-    socket.to(payload.roomName).emit("welcome", socket.nickname);
+    socket
+      .to(payload.roomName)
+      .emit("welcome", socket.nickname, countRoom(payload.roomName));
     wsServer.sockets.emit("room_change", publicRooms());
   });
   // disconnecting은 정해져있음. 누군가 나가기 전에(Browser연결 끊기기 전에) 실행
   socket.on("disconnecting", () => {
     socket.rooms.forEach((socketId) =>
-      socket.to(socketId).emit("bye", socket.nickname)
+      socket
+        .to(socketId)
+        .emit("bye", socket.nickname, countRoom(payload.roomName) - 1)
     );
     // wsServer.sockets.emit("room_change", publicRooms());
     // 방을 나가기 전에 실행되서 해당 방이 찍힘.
