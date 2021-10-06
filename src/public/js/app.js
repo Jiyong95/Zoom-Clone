@@ -65,3 +65,17 @@ socket.on("bye", (left) => {
 // BE에서 emit하면 받을 event
 socket.on("new_message", addMessage);
 // socket.on("new_message", (msg)=>addMessage(msg)); 와 동일
+
+socket.on("room_change", (rooms) => {
+  const roomList = welcome.querySelector("ul");
+  if (rooms.length === 0) {
+    roomList.innerHTML = "";
+    return;
+  }
+  rooms.forEach((room) => {
+    const li = document.createElement("li");
+    li.innerText = room;
+    roomList.append(li);
+  });
+});
+// socket.on("room_change", (msg) => console.log(msg));

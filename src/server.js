@@ -19,10 +19,26 @@ app.get("/*", (req, res) => res.redirect("/"));
 const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
+function publicRooms() {
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = wsServer;
+  // console.log("sids : ", sids);
+  // console.log("rooms : ", rooms);
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) publicRooms.push(key);
+  });
+  return publicRooms;
+}
+
 wsServer.on("connection", (socket) => {
   socket["nickname"] = "guest";
   // middleware, 어느 event에서든지 실행된다.
   socket.onAny((event) => {
+    // console.log(wsServer.sockets.adapter);
     console.log(`Socket Event:${event}`);
   });
   socket.on("enter_room", (payload, showRoom) => {
@@ -33,12 +49,19 @@ wsServer.on("connection", (socket) => {
     showRoom();
     // 같은 roomName에 있는 사람들(socket)에게(나자신 제외) emit
     socket.to(payload.roomName).emit("welcome", socket.nickname);
+    wsServer.sockets.emit("room_change", publicRooms());
   });
-  // disconnecting은 정해져있음. 누군가 나가면(Browser연결 끊기면) 실행
+  // disconnecting은 정해져있음. 누군가 나가기 전에(Browser연결 끊기기 전에) 실행
   socket.on("disconnecting", () => {
     socket.rooms.forEach((socketId) =>
       socket.to(socketId).emit("bye", socket.nickname)
     );
+    // wsServer.sockets.emit("room_change", publicRooms());
+    // 방을 나가기 전에 실행되서 해당 방이 찍힘.
+  });
+  socket.on("disconnect", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
+    // 방을 나가고 실행되서 해당 방이 안 찍힘.
   });
   // FE에서 받을 emit
   socket.on("new_message", (msg, roomName, done) => {
